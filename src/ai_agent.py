@@ -4,6 +4,26 @@ from openai import OpenAI
 import json
 import extract_course_list as ecl
 
+def answer_with_ai(ai_client, user_query: str, context_text: str):
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are a helpful DVC course advisor that helps students understand which courses transfer to UCs for Computer Science major. Only use the provided CONTEXT to answer. "
+                "If the answer is not in the context, say: 'I don't know based on the provided data.' "
+                "Do not invent courses or mappings that are not explicitly shown."
+            ),
+        },
+        {"role": "user", "content": user_query},
+        {"role": "assistant", "content": f"CONTEXT:\n{context_text}"},
+    ]
+    resp = ai_client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages,
+        temperature=0.2
+    )
+    return resp.choices[0].message.content.strip()
+
 def main():
     # Load environment variables
     load_dotenv()
@@ -46,9 +66,7 @@ def main():
         return results
     """
     # Keep conversation history for context
-    conversation_history = [
-        {"role": "system", "content": "You are a helpful DVC course advisor that helps students understand which courses transfer to UCs for Computer Science major."}
-    ]
+    conversation_history = []
     print("------DVC Course Advisor: Type 'quit' or 'exit' to end the conversation------\n")
 
     # User query
@@ -68,15 +86,9 @@ def main():
             conversation_history.append({"role": "user", "content": user})
             
             # Give chatbot some context - could also implement key words
-            context = f"Here are the matching DVC courses that transfer to each corresponding UC: {ecl.ucd_map}, {ecl.uci_data}, {ecl.ucd_data}, {ecl.ucsd_data}"
+            context = f"Here are the matching DVC courses that transfer to each corresponding UC: {ecl.ucd_map}, {ecl.uci_map}, {ecl.ucd_map}, {ecl.ucsd_map}"
 
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=conversation_history,
-                temperature=0.7
-            )
-
-            assistant_response = response.choices[0].message.content
+            assistant_response = answer_with_ai(client, user, context)
 
             conversation_history.append({"role": "assistant", "content": assistant_response})
             print(f"\nResponse: {assistant_response}\n")
