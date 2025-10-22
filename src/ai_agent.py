@@ -45,26 +45,46 @@ def main():
                             })
         return results
     """
+    # Keep conversation history for context
+    conversation_history = [
+        {"role": "system", "content": "You are a helpful DVC course advisor that helps students understand which courses transfer to UCs for Computer Science major."}
+    ]
+    print("------DVC Course Advisor: Type 'quit' or 'exit' to end the conversation------\n")
+
     # User query
-    print("Ask DVC Chatbot anything related to UC transfer requirements: ")
-    user_query = input()
-    print()
+    while True:
+        try:
+            print("Ask DVC Chatbot anything related to UC transfer requirements: ")
+            user = input()
+            print()
 
-    # Pass results back to the model for formatting
+            if user.lower() in ['quit', 'exit']:
+                print("Goodbye! Good luck transferring!")
+                break
+            if not user:
+                continue
+            
+            # Add user message to history
+            conversation_history.append({"role": "user", "content": user})
+            
+            # Give chatbot some context - could also implement key words
+            context = f"Here are the matching DVC courses that transfer to each corresponding UC: {ecl.ucd_map}, {ecl.uci_data}, {ecl.ucd_data}, {ecl.ucsd_data}"
 
-    context = f"Here are the matching DVC courses that transfer to each corresponding UC: {ecl.ucd_map}, {ecl.uci_data}, {ecl.ucd_data}, {ecl.ucsd_data}"
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a helpful DVC course advisor that helps students understand which courses transfer to UCs for Computer Science major."},
-                {"role": "user", "content": user_query},
-                {"role": "assistant", "content": context}
-            ]
-        )
-        print(response.choices[0].message.content)
-    except Exception as e:
-        print("API call failed:", e)
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=conversation_history,
+                temperature=0.7
+            )
+
+            assistant_response = response.choices[0].message.content
+
+            conversation_history.append({"role": "assistant", "content": assistant_response})
+            print(f"\nResponse: {assistant_response}\n")
+        except KeyboardInterrupt:
+            print("\n\nGoodbye! Good luck with your transfer!")
+            break
+        except Exception as e:
+            print("API call failed:", e)
 
 if __name__ == "__main__":
     main()
