@@ -15,10 +15,11 @@ def main():
     # Initialize OpenAI client
     client = OpenAI(api_key=api_key)
 
+    """
     # Load your course data
     with open("agreements_25-26/ucb_25-26_cs.json", "r") as file:
         data = json.load(file)
-    """
+
     ----------Test function:----------
     def search_courses(course_code):
         #Search for DVC courses that match the given course code.
