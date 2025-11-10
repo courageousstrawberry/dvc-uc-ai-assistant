@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Course Transfer Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #ECEBE4;
+      --primary-dark: #28464B;
+      --primary-green: #43863C;
+      --accent-orange: #F98948;
+      --text-light: #fff;
+      --container-bg: #fff;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    #main-container {
+      width: 90%;
+      max-width: 600px;
+      margin: 30px auto;
+      border: none;
+      border-radius: 15px;
+      padding: 25px;
+      background-color: var(--container-bg);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    #header {
+      text-align: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--bg-color);
+    }
+
+    #header h1 {
+      color: var(--primary-dark);
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    #tabs {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .tab-button {
+      background-color: var(--primary-green);
+      color: var(--text-light);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      margin: 0 5px;
+      font-size: 16px;
+      font-weight: 500;
+      transition: background-color 0.3s;
+    }
+
+    .tab-button:hover {
+      background-color: #366a30; /* Darker green */
+    }
+
+    .tab-button.active {
+      background-color: var(--primary-dark);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    #chat-container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #chat-messages {
+      flex-grow: 1;
+      height: 400px;
+      overflow-y: auto;
+      padding: 15px;
+      margin-top: 15px;
+    }
+
+    #user-input {
+      display: flex;
+      margin-top: 20px;
+      border-top: 1px solid var(--bg-color);
+      padding-top: 20px;
+    }
+
+    #prompt-input {
+      flex-grow: 1;
+      border: 2px solid var(--bg-color);
+      padding: 12px 15px;
+      border-radius: 25px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+
+    #prompt-input:focus {
+      outline: none;
+      border-color: var(--primary-green);
+    }
+
+    #send-button {
+      background-color: var(--primary-green);
+      color: var(--text-light);
+      border: none;
+      padding: 12px 25px;
+      border-radius: 25px;
+      cursor: pointer;
+      margin-left: 10px;
+      font-size: 16px;
+      font-weight: 500;
+      transition: background-color 0.3s;
+    }
+
+    #send-button:hover {
+      background-color: #366a30; /* Darker green */
+    }
+
+    .message {
+      margin: 15px 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .user-message {
+      align-items: flex-end;
+    }
+
+    .bot-message {
+      align-items: flex-start;
+    }
+
+    .message-bubble {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 20px;
+      max-width: 85%;
+      line-height: 1.5;
+    }
+
+    .user-bubble {
+      background-color: var(--accent-orange);
+      color: var(--text-light);
+      border-bottom-right-radius: 5px;
+    }
+
+    .bot-bubble {
+      background-color: var(--primary-dark);
+      color: var(--text-light);
+      border-bottom-left-radius: 5px;
+    }
+    
+    .loader {
+        border: 4px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 4px solid var(--primary-green);
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+        margin: 15px auto;
+        display: none; /* Initially hidden */
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+  </style>
+</head>
+<body>
+  <div id="main-container">
+    <div id="header">
+      <h1>AI Transfer Assistant</h1>
+    </div>
+
+    <div id="tabs">
+      <button class="tab-button active" data-target="home">Home</button>
+      <button class="tab-button" data-target="how-to">How to Use</button>
+      <button class="tab-button" data-target="chatbot">Chatbot</button>
+    </div>
+
+    <div id="home" class="tab-content active" data-src="/home.html">
+      <!-- home content will be loaded dynamically from /home.html -->
+    </div>
+
+    <div id="how-to" class="tab-content" data-src="/how-to.html">
+      <!-- how-to content will be loaded dynamically from /how-to.html -->
+    </div>
+
+    <div id="chatbot" class="tab-content" data-src="/chatbot.html">
+      <!-- chatbot content will be loaded dynamically from /chatbot.html -->
+    </div>
+  </div>
+
+  <script>
+    // Dynamically load tab content from separate files and initialize chatbot when needed.
+    async function loadTabContent(tabName) {
+      const container = document.getElementById(tabName);
+      if (!container) return;
+      if (container.dataset.loaded === 'true') return;
+      const src = container.getAttribute('data-src');
+      if (!src) return;
+      try {
+        const res = await fetch(src);
+        if (!res.ok) {
+          container.innerHTML = `<p>Failed to load content (status ${res.status})</p>`;
+        } else {
+          const html = await res.text();
+          container.innerHTML = html;
+          container.dataset.loaded = 'true';
+          if (tabName === 'chatbot') {
+            initChatbot();
+          }
+        }
+      } catch (err) {
+        container.innerHTML = `<p>Unable to load content.</p>`;
+        console.error('Load tab error', err);
+      }
+    }
+
+    function openTab(tabName, ev) {
+      const tabcontent = document.getElementsByClassName('tab-content');
+      for (let i = 0; i < tabcontent.length; i++) tabcontent[i].style.display = 'none';
+      const tablinks = document.getElementsByClassName('tab-button');
+      for (let i = 0; i < tablinks.length; i++) tablinks[i].className = tablinks[i].className.replace(' active', '');
+      document.getElementById(tabName).style.display = 'block';
+      if (ev && ev.currentTarget) ev.currentTarget.className += ' active';
+      // load content for the activated tab (if not already loaded)
+      loadTabContent(tabName);
+    }
+
+    const displayMessage = (message, sender, chatMessages) => {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message', `${sender}-message`);
+      const formattedMessage = message.replace(/\n/g, '<br>');
+      messageDiv.innerHTML = `<div class="message-bubble ${sender}-bubble">${formattedMessage}</div>`;
+      chatMessages.appendChild(messageDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    };
+
+    function initChatbot() {
+      const sendButton = document.getElementById('send-button');
+      const promptInput = document.getElementById('prompt-input');
+      const chatMessages = document.getElementById('chat-messages');
+      const loadingSpinner = document.getElementById('loading-spinner');
+      if (!sendButton || !promptInput || !chatMessages || !loadingSpinner) return;
+
+      const handleSend = async () => {
+        const prompt = promptInput.value.trim();
+        if (!prompt) return;
+        displayMessage(prompt, 'user', chatMessages);
+        promptInput.value = '';
+        loadingSpinner.style.display = 'block';
+        try {
+          const response = await fetch('http://127.0.0.1:8080/prompt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
+          });
+          if (response.ok) {
+            const data = await response.json();
+            displayMessage(data.response, 'bot', chatMessages);
+          } else {
+            const errorText = await response.text();
+            displayMessage(`Error: ${response.status} ${response.statusText}. ${errorText}`, 'bot', chatMessages);
+            console.error('Error:', response.statusText, errorText);
+          }
+        } catch (error) {
+          displayMessage('Could not connect to the server. Please ensure it is running.', 'bot', chatMessages);
+          console.error('Fetch Error:', error);
+        } finally {
+          loadingSpinner.style.display = 'none';
+        }
+      };
+
+      sendButton.addEventListener('click', handleSend);
+      promptInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(); });
+    }
+
+    // Attach click handlers to tab buttons to pass the event through
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', (ev) => {
+        const target = btn.dataset.target || btn.textContent.trim().toLowerCase().replace(/\s+/g, '-');
+        openTab(target, ev);
+      });
+    });
+
+    // Load default tab on DOM ready
+    document.addEventListener('DOMContentLoaded', () => openTab('home'));
+  </script>
+</body>
+</html>
